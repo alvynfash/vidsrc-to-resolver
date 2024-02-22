@@ -5,12 +5,6 @@ from utils import NoSourcesFound
 
 app = Flask(__name__)
 
-# Instantiate VidSrcExtractor
-vse = VidSrcExtractor(
-    source_name = "Vidplay",
-    fetch_subtitles = True,
-)
-
 # Health route
 @app.route('/health', methods=['GET'])
 def health_check():
@@ -24,11 +18,16 @@ def get_streams():
     media_type = request.args.get('type')
     season = request.args.get('season')
     episode = request.args.get('episode')
+    get_subtitles = request.args.get('subtitles')
 
     if not media_id or not media_type:
         return jsonify({'error': 'Both id and type are required.'}), 400
 
-    # Assuming vse is defined elsewhere
+    # Instantiate VidSrcExtractor
+    vse = VidSrcExtractor(
+        source_name = "Vidplay",
+        fetch_subtitles = True if get_subtitles else False,
+    )
     streams, subtitles = vse.get_streams(media_type, media_id, None, None)
     if not streams:
         return jsonify({'error': 'No streams found for the provided parameters.'}), 404
