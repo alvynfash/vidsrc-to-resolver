@@ -26,7 +26,13 @@ def get_streams():
     if not streams:
         return jsonify({'error': 'No streams found for the provided parameters.'}), 404
 
-    return jsonify(streams)
+
+    json_streams = {
+        "url": streams[0],
+        "subtitles": subtitles
+    }
+
+    return jsonify(json_streams)
 
 @app.errorhandler(NoSourcesFound)
 def handle_no_sources_found(error):
