@@ -144,7 +144,7 @@ if __name__ == "__main__":
                         help="Output ffmpeg errors from mpv")
     args = parser.parse_args()
 
-    assert Utilities.check_mpv_exists(), "mpv is not installed or could not find installation! Please download mpv @ \"https://mpv.io/installation/\" before continuing..."
+    # assert Utilities.check_mpv_exists(), "mpv is not installed or could not find installation! Please download mpv @ \"https://mpv.io/installation/\" before continuing..."
 
     source_name = args.source_name or questionary.select("Select Source", choices=SUPPORTED_SOURCES).unsafe_ask()
 
@@ -227,4 +227,5 @@ if __name__ == "__main__":
         if selection != "None":
             mpv_cmd += f"--sub-file=\"{subtitles.get(selection)}\" "
 
-    os.system(mpv_cmd)
+    # os.system(mpv_cmd)
+    print(f"Done: Stream: {stream}")
