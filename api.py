@@ -11,6 +11,13 @@ vse = VidSrcExtractor(
     fetch_subtitles = True,
 )
 
+# Health route
+@app.route('/health', methods=['GET'])
+def health_check():
+    # Check if your application is healthy
+    health_status = {'status': 'ok'}
+    return jsonify(health_status), 200
+
 @app.route('/streams', methods=['GET'])
 def get_streams():
     media_id = request.args.get('id')
@@ -32,7 +39,7 @@ def get_streams():
         "subtitles": subtitles
     }
 
-    return jsonify(json_streams)
+    return jsonify(json_streams), 200
 
 @app.errorhandler(NoSourcesFound)
 def handle_no_sources_found(error):
