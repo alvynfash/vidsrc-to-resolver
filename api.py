@@ -3,7 +3,7 @@ from flask import Flask, request, jsonify
 from vidsrc import VidSrcExtractor
 from utils import NoSourcesFound
 
-app = Flask(__name__, static_url_path='/static')
+app = Flask(__name__)
 
 # Health route
 @app.route('/health', methods=['GET'])
