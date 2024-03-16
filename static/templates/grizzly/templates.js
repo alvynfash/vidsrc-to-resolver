@@ -9,174 +9,189 @@ const templates = {
     return `https://image.tmdb.org/t/p/original${media.backdrop_path}`;
   },
 
-  getGenres: function (media) {
-    return media.genres.map(genre => genre.name);
-  },
-
   getDescription: function (media) {
     return `${media.overview}                                                                  `;
   },
 
-  creditLockup: function (castMember) {
-    return `<monogramLockup>
-              <monogram src="https://image.tmdb.org/t/p/w500${castMember.profile_path}" />
-              <title>${castMember.name}</title>
-            </monogramLockup>`;
+  castLockup: function (credits) {
+    let filteredCast = credits.cast.filter(member => member.profile_path !== null);
+
+    let xml = `<shelf class="shelfLayout">
+                  <header>
+                    <title>Casts</title>
+                  </header>
+                  <section>`;
+
+    filteredCast.forEach(castMember => {
+      xml += `<monogramLockup>
+                <monogram src="https://image.tmdb.org/t/p/w500${castMember.profile_path}" />
+                <title>${castMember.name}</title>
+              </monogramLockup>`;
+    });
+
+    xml += `</section>
+          </shelf>`;
+
+    return xml;
   },
 
-  movieLockup: function (movie) {
-    // <title>${movie.title}</title>
-    return `
-      <lockup template="movie" id="${movie.id}">
-        <img src="${this.getPosterUrl(movie)}" width="245" height="340" />
-      </lockup>`;
+  genresLockup: function (genres) {
+    let xml = `<infoList>
+                <info>
+                  <header>
+                    <title>Genre</title>
+                  </header>`;
+
+    genres.forEach(genre => {
+      xml += `<text>${genre.name}</text>`;
+    });
+
+    xml += `</info>
+          </infoList>`;
+
+    return xml;
   },
 
-  tvShowLockup: function (tvShow) {
-    // let title = tvShow.name;
-    // <title>${title}</title>
-    return `
-      <lockup template="tvShow">
-        <img src="${this.getPosterUrl(tvShow)}" width="245" height="340" />
-      </lockup>`;
-  },
-
-  home: function (movies, tvShows) {
-    // Return the XML string for the movies template
-    let xml = `<?xml version="1.0" encoding="UTF-8" ?>
-    <document>
-      <head>
-        <style>
-          .darkBackgroundColor {
-            background-color: #091a2a;
-          }
-        </style>
-      </head>
-
-      <stackTemplate theme="dark" class="darkBackgroundColor">
-        <identityBanner>
-          <title>GrizzlyTime</title>
-          <row>
-            <buttonLockup>
-              <badge src="resource://button-checkmark" />
-              <title>Favorites</title>
-            </buttonLockup>
-            <buttonLockup>
-              <badge src="resource://button-checkmark" />
-              <title>Search</title>
-            </buttonLockup>
-          </row>
-        </identityBanner>
-        <collectionList>
-          <shelf>
-            <header>
-              <title>Movies</title>
-            </header>
-            <section>`;
+  movieLockup: function (movies) {
+    let xml = `<shelf>
+                  <header>
+                    <title>Movies</title>
+                  </header>
+                  <section>`;
 
     // Loop through each movie and generate lockup elements
     movies.forEach(movie => {
-      xml += this.movieLockup(movie);
+      xml += `<lockup template="movie" id="${movie.id}">
+                <img src="${this.getPosterUrl(movie)}" width="245" height="340" />
+              </lockup>`;
     });
 
-    // Close the section and grid tags
-    xml += `
-    </section>
-          </shelf>
-          <shelf>
-            <header>
-              <title>Tv Shows</title>
-            </header>
-            <section>`;
+    xml += `</section>
+          </shelf>`;
+
+    return xml;
+  },
+
+  tvShowLockup: function (tvShows) {
+    let xml = `<shelf>
+                  <header>
+                    <title>Tv Shows</title>
+                  </header>
+                  <section>`;
 
     // Loop through each movie and generate lockup elements
     tvShows.forEach(tvShow => {
-      xml += this.tvShowLockup(tvShow);
+      xml += `<lockup template="tvShow">
+                <img src="${this.getPosterUrl(tvShow)}" width="245" height="340" />
+              </lockup>`;
     });
 
-    // Close the section and grid tags
-    xml += `
-            </section>
-          </shelf>
-        </collectionList>
-      </stackTemplate>
-    </document>`;
+    xml += `</section>
+          </shelf>`;
+
+    return xml;
+  },
+
+  home: function (movies, tvShows) {
+    let xml = `<?xml version="1.0" encoding="UTF-8" ?>
+  <document>
+    <head>
+      <style>
+        .darkBackgroundColor {
+          background-color: #091a2a;
+        }
+      </style>
+    </head>
+
+    <stackTemplate theme="dark" class="darkBackgroundColor">
+      <identityBanner>
+        <title>GrizzlyTime</title>
+        <row>
+          <buttonLockup>
+            <img src="${tvBaseURL}resources/images/icons/star.png" width="32" height="32" />
+            <title>Favorites</title>
+          </buttonLockup>
+          <buttonLockup>
+            <img src="${tvBaseURL}resources/images/icons/search.png" width="32" height="32" />
+            <title>Search</title>
+          </buttonLockup>
+        </row>
+      </identityBanner>
+      <collectionList>`;
+
+    xml += this.movieLockup(movies);
+
+    xml += this.tvShowLockup(tvShows);
+
+    xml += `</collectionList>
+          </stackTemplate>
+        </document>`;
 
     return xml;
   },
 
   detail: function (media) {
     let xml = `<?xml version="1.0" encoding="UTF-8" ?>
-    <document>
-      <head>
-        <style>
-        .showTextOnHighlight {
-          tv-text-highlight-style: show-on-highlight;
-        }
-        .whiteBadge {
-          tv-tint-color: rgb(255, 255, 255);
-        }
-        .shelfLayout {
-          padding: 20 90 50;
-        }
-        </style>
-      </head>
-      <productTemplate theme="dark">
-        <background>
-          <img src="${this.getBackdropUrl(media)}" />
-        </background>
-        <banner>
-          <stack>
-            <title>${media.title}</title>
-            <text>IMDB (${media.vote_average})</text>
-            <text>${this.getGenres(media)}</text>
-            <description allowsZooming="true" template="${tvBaseURL}templates/AlertWithDescription.xml.js" presentation="modalDialogPresenter">${this.getDescription(media)}</description>
-            <row>
-              <buttonLockup template="video" id="${media.id}">
-                <badge src="resource://button-cloud" class="whiteBadge" />
-                <title>Watch</title>
-              </buttonLockup>
-              <buttonLockup>
-                <badge src="resource://button-add" class="whiteBadge" />
-                <title>Favorites</title>
-              </buttonLockup>
-            </row>
-          </stack>
-        </banner>
-        <shelf class="shelfLayout">
-          <header>
-            <title>Casts</title>
-          </header>
-          <section>`;
+                <document>
+                  <head>
+                    <style>
+                      .showTextOnHighlight {
+                        tv-text-highlight-style: show-on-highlight;
+                      }
+                      .whiteBadge {
+                        tv-tint-color: rgb(255, 255, 255);
+                      }
+                      .shelfLayout {
+                        padding: 20 90 50;
+                      }
+                    </style>
+                  </head>
+                  <productTemplate theme="dark">
+                    <background>
+                    </background>
+                    <banner>`;
 
-    const filteredCast = media.credits.cast.filter(member => member.profile_path !== null);
-    filteredCast.forEach(castMember => {
-      xml += this.creditLockup(castMember);
-    });
+    xml += this.genresLockup(media.genres);
 
-    xml += `</section>
-      </shelf>
-      </productTemplate>
-    </document>`;
+    xml += `<stack>
+              <title>${media.title}</title>
+              <row>
+                <text><badge src="resource://tomato-fresh" /> ${media.vote_average}</text>
+                <text>${media.release_date}</text>
+                <badge src="resource://mpaa-pg" class="whiteBadge" />
+                <badge src="resource://cc" class="whiteBadge" />
+              </row>
+              <description handlesOverflow="true" allowsZooming="true">${this.getDescription(media)}</description>
+              <row>
+                <buttonLockup template="video" id="${media.id}">
+                  <img src="${tvBaseURL}resources/images/icons/play.png" width="40" height="40" />
+                  <title>Watch</title>
+                </buttonLockup>
+                <buttonLockup>
+                  <img src="${tvBaseURL}resources/images/icons/star_plus.png" width="40" height="40" />
+                  <title>Add to List</title>
+                </buttonLockup>
+              </row>
+            </stack>`;
+
+    xml += `<heroImg src="${this.getBackdropUrl(media)}" />
+          </banner>`;
+
+    xml += this.castLockup(media.credits);
+
+    xml += `</productTemplate>
+          </document >`;
 
     return xml;
   },
 
-  video: function (title, streamInfo) {
+  test: function () {
     return `<?xml version="1.0" encoding="UTF-8" ?>
-    <document>
-      <fullScreenTemplate>
-        <banner>
-            <title>Title of the Media</title>
-            <subtitle>Subtitle of the Media</subtitle>
-        </banner>
-        <content>
-            <video autoplay="true" id="myVideo">
-                <title>${title}</title>
-                <source src="${streamInfo.url}" />
-            </video>
-        </content>
-      </fullScreenTemplate>
-    </document>`;
+            <document>
+              <alertTemplate>
+                <title>Error</title>
+                <description>Something went wrong</description>
+              </alertTemplate>
+            </document>`;
   }
 };

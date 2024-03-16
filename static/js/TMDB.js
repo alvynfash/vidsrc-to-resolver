@@ -1,7 +1,7 @@
 const API_KEY = '8cc0165ba6cfe8f3f1d0704bba65c29c';
 const BASE_URL = 'https://api.themoviedb.org/3';
 
-const iterations = 10;
+const iterations = 20;
 let movies = [];
 let tvShows = [];
 let detail = null;
@@ -9,45 +9,12 @@ let pageDoc = null;
 
 var TMDB = {
     fetchMoviesAndTvShows: function () {
+        Presenter.showLoadingIndicator();
         Promise.all([fetchMovies(), fetchTVShows()])
             .then(() => renderMoviesAndTVShows(movies, tvShows))
             .catch(error => console.error('Error fetching movies and TV shows:', error));
     }
 }
-
-// function _buildMenu() {
-//     let titles = ['Movies', 'TV Shows', 'Favorites', 'Search'];
-//     let menuXml = templates.menu();
-//     let menuDoc = Presenter.makeDocument(menuXml);
-//     let menuBarXml = menuDoc.getElementsByTagName('menuBar').item(0);
-
-//     titles.forEach(function (title) {
-//         // Create title element and set its text content
-//         let titleElement = menuDoc.createElement('title');
-//         titleElement.textContent = title;
-
-//         // Create menuItem element
-//         let menuItemElement = menuDoc.createElement('menuItem');
-//         menuItemElement.setAttribute('id', '$title');
-//         // Append title element to menuItemElement
-//         menuItemElement.appendChild(titleElement);
-
-//         // Append menuItem to menuBar
-//         menuBarXml.appendChild(menuItemElement);
-//     });
-
-//     pageDoc = menuDoc;
-//     pageDoc.addEventListener('select', Presenter.load.bind(Presenter));
-//     navigationDocument.pushDocument(pageDoc);
-// }
-
-// // Function to handle lazy loading of movies
-// function lazyLoadMovies() {
-//     if (currentMoviesPage < totalPages && isScrolledToBottom()) {
-//         currentMoviesPage++;
-//         fetchLatestMovies();
-//     }
-// }
 
 function fetch(url) {
     return new Promise(function (resolve, reject) {
@@ -102,9 +69,8 @@ function renderMoviesAndTVShows(movies, tvShows) {
     let homeXml = templates.home(movies, tvShows);
     let homeDoc = Presenter.makeDocument(homeXml);
 
-    // homeDoc.addEventListener('select', Presenter.load.bind(Presenter));
-
     homeDoc.addEventListener('select', async function (event) {
+        // Enable if detail request takes too long
         // Presenter.showLoadingIndicator();
 
         let element = event.target;
@@ -119,32 +85,32 @@ function renderMoviesAndTVShows(movies, tvShows) {
             movieDetailsDoc.addEventListener('select', async function (event) {
                 let element = event.target;
                 if (element.getAttribute('template') === 'video') {
-                    Presenter.showLoadingIndicator();
                     // let imdbId = element.getAttribute('id');
                     // let movie = movies.find(movie => movie.id == movieId);
+
+                    let player = new Player();
+                    player.present();
+
                     let streamInfo = await fetchStreamInfo(detail.imdb_id);
-
-                    // let videoXml = templates.video(detail.title, streamInfo);
-                    // let videoDoc = Presenter.makeDocument(videoXml);
-                    // navigationDocument.pushDocument(videoDoc);
-
                     let mediaItem = new MediaItem("video", streamInfo.url);
-
-                    var playlist = new Playlist();
+                    let playlist = new Playlist();
                     playlist.push(mediaItem);
 
-                    var player = new Player();
-                    player.playlist = playlist;
-                    player.addEventListener("stateDidChange", function (event) {
-                        if (event.state === "end") {
-                            Presenter.removeLoadingIndicator();
-                        }
-                    });
+                    if (player) {
+                        player.playlist = playlist;
+                        player.play();
+                        // player.addEventListener("stateDidChange", function (event) {
+                        //     if (event.state === "end") {
+                        //         // Presenter.removeLoadingIndicator();
+                        //         // navigationDocument.popDocument();
+                        //     }
+                        // });
+                    }
 
-                    player.play();
                 }
             });
-            navigationDocument.pushDocument(movieDetailsDoc);
+            Presenter.defaultPresenter(movieDetailsDoc)
+
         } else if (element.getAttribute('template') === 'tvShow') {
             // let tvShowId = element.getAttribute('tvShowId');
             // let tvShow = tvShows.find(tvShow => tvShow.id == tvShowId);
@@ -155,5 +121,6 @@ function renderMoviesAndTVShows(movies, tvShows) {
 
 
     },);
-    navigationDocument.pushDocument(homeDoc);
+
+    Presenter.defaultPresenter(homeDoc)
 }
