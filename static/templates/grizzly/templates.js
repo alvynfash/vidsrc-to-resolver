@@ -52,7 +52,20 @@ const templates = {
     return xml;
   },
 
-  movieLockup: function (movies) {
+  movieLockup: function (movie) {
+    // <title>${movie.title}</title>
+    return `<lockup template="movie" id="${movie.id}">
+              <img src="${this.getPosterUrl(movie)}" width="245" height="340" />
+            </lockup>`;
+  },
+
+  tvShowLockup: function (tvShow) {
+    return `<lockup template="tvShow" id="${tvShow.id}">
+            <img src="${this.getPosterUrl(tvShow)}" width="245" height="340" />
+          </lockup>`;
+  },
+
+  moviesShelf: function (movies) {
     let xml = `<shelf>
                   <header>
                     <title>Movies</title>
@@ -61,9 +74,7 @@ const templates = {
 
     // Loop through each movie and generate lockup elements
     movies.forEach(movie => {
-      xml += `<lockup template="movie" id="${movie.id}">
-                <img src="${this.getPosterUrl(movie)}" width="245" height="340" />
-              </lockup>`;
+      xml += this.movieLockup(movie);
     });
 
     xml += `</section>
@@ -72,7 +83,7 @@ const templates = {
     return xml;
   },
 
-  tvShowLockup: function (tvShows) {
+  tvShowsshelf: function (tvShows) {
     let xml = `<shelf>
                   <header>
                     <title>Tv Shows</title>
@@ -81,9 +92,7 @@ const templates = {
 
     // Loop through each movie and generate lockup elements
     tvShows.forEach(tvShow => {
-      xml += `<lockup template="tvShow">
-                <img src="${this.getPosterUrl(tvShow)}" width="245" height="340" />
-              </lockup>`;
+      xml += this.tvShowLockup(tvShow);
     });
 
     xml += `</section>
@@ -107,21 +116,21 @@ const templates = {
       <identityBanner>
         <title>GrizzlyTime</title>
         <row>
-          <buttonLockup>
-            <img src="${tvBaseURL}resources/images/icons/star.png" width="32" height="32" />
-            <title>Favorites</title>
-          </buttonLockup>
-          <buttonLockup>
+          <buttonLockup template="search">
             <img src="${tvBaseURL}resources/images/icons/search.png" width="32" height="32" />
             <title>Search</title>
+          </buttonLockup>
+          <buttonLockup template="favorite">
+            <img src="${tvBaseURL}resources/images/icons/star.png" width="32" height="32" />
+            <title>Favorites</title>
           </buttonLockup>
         </row>
       </identityBanner>
       <collectionList>`;
 
-    xml += this.movieLockup(movies);
+    xml += this.moviesShelf(movies);
 
-    xml += this.tvShowLockup(tvShows);
+    xml += this.tvShowsshelf(tvShows);
 
     xml += `</collectionList>
           </stackTemplate>
@@ -156,12 +165,12 @@ const templates = {
     xml += `<stack>
               <title>${media.title}</title>
               <row>
-                <text><badge src="resource://tomato-fresh" /> ${media.vote_average}</text>
+                <text><badge src="resource://tomato-fresh" /> ${parseFloat(media.vote_average).toFixed(1)}</text>
                 <text>${media.release_date}</text>
                 <badge src="resource://mpaa-pg" class="whiteBadge" />
                 <badge src="resource://cc" class="whiteBadge" />
               </row>
-              <description handlesOverflow="true" allowsZooming="true">${this.getDescription(media)}</description>
+              <description template="alert" handlesOverflow="true" allowsZooming="true">${this.getDescription(media)}</description>
               <row>
                 <buttonLockup template="video" id="${media.id}">
                   <img src="${tvBaseURL}resources/images/icons/play.png" width="40" height="40" />
@@ -180,18 +189,71 @@ const templates = {
     xml += this.castLockup(media.credits);
 
     xml += `</productTemplate>
-          </document >`;
+          </document>`;
 
     return xml;
   },
 
-  test: function () {
+  search: function () {
     return `<?xml version="1.0" encoding="UTF-8" ?>
-            <document>
-              <alertTemplate>
-                <title>Error</title>
-                <description>Something went wrong</description>
-              </alertTemplate>
-            </document>`;
-  }
+                    <document>
+                      <head>
+                        <style>
+                          .suggestionListLayout {
+                            margin: -150 0;
+                          }
+                        </style>
+                      </head>
+                      <searchTemplate>
+                        <searchField id="searchField">Search</searchField>
+                        <collectionList>
+                          <grid>
+                            <header>
+                              <title>Type the name of a movie or Tv Show to find it</title>
+                            </header>
+                            <section>
+                            </section>
+                          </grid>
+                        </collectionList>
+                      </searchTemplate>
+                    </document>`;
+  },
+
+  noSearchResultLockup: function (title, message) {
+    return `<list>
+              <section>
+                <header>
+                  <title>${title}</title>
+                  <text>${message}</text>
+                </header>
+              </section>
+            </list>`;
+  },
+
+  // searchResultLockup: function (result) {
+  //   return `<lockup template="searchResult" id="${result.id}">
+  //             <img src="${this.getPosterUrl(result)}" width="340" height="245" />
+  //             <title>${result.title}</title>
+  //           </lockup>`;
+  // },
+
+  searchResultsCollection: function (results) {
+    let xml = `<collectionList>
+                <grid>
+                  <header>
+                    <title>Results</title>
+                  </header>
+                  <section>`;
+
+    results.forEach(result => {
+      xml += this.movieLockup(result);
+    });
+
+    xml += `</section>
+          </grid>
+        </collectionList>`;
+
+    return xml;
+  },
+
 };

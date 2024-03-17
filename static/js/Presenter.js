@@ -43,7 +43,7 @@ var Presenter = {
      * the onTextChange handler to allow for a search implementation
      * @param {Document} xml - The XML document to push on the stack
      */
-    searchPresenter: function (xml) {
+    searchPresenter: function (xml, resultsCallback) {
 
         this.defaultPresenter.call(this, xml);
         var doc = xml;
@@ -54,6 +54,10 @@ var Presenter = {
         keyboard.onTextChange = function () {
             var searchText = keyboard.text;
             console.log('search text changed: ' + searchText);
+            if (resultsCallback) {
+                resultsCallback(searchText);
+                return;
+            }
             buildResults(doc, searchText);
         }
     },

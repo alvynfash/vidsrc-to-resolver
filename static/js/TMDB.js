@@ -65,16 +65,48 @@ async function fetchStreamInfo(imdbId) {
     return data;
 }
 
+async function fetchSearchResults(query) {
+    const tmdbEndpoint = `https://api.themoviedb.org/3/search/movie?api_key=${API_KEY}&query=${query}`;
+
+    try {
+        const response = await fetch(tmdbEndpoint);
+        return response.results;
+    } catch (error) {
+        console.error('Error fetching data from TMDB API:', error);
+        return [];
+    }
+}
+
 function renderMoviesAndTVShows(movies, tvShows) {
     let homeXml = templates.home(movies, tvShows);
     let homeDoc = Presenter.makeDocument(homeXml);
+    attachMainListener(homeDoc);
+    Presenter.defaultPresenter(homeDoc)
+}
 
-    homeDoc.addEventListener('select', async function (event) {
+function attachMainListener(document) {
+    document.addEventListener('select', async function (event) {
         // Enable if detail request takes too long
         // Presenter.showLoadingIndicator();
 
         let element = event.target;
-        if (element.getAttribute('template') === 'movie') {
+        let template = element.getAttribute('template');
+
+        if (template === 'search') {
+            let searchXml = templates.search();
+            let searchDoc = Presenter.makeDocument(searchXml);
+            attachMainListener(searchDoc);
+            Presenter.searchPresenter(searchDoc, (searchQuery) => {
+                this.buildResults(searchDoc, searchQuery);
+            });
+            return;
+        }
+
+        if (template === 'favorite') {
+            return;
+        }
+
+        if (template === 'movie') {
             let movieId = element.getAttribute('id');
             detail = await fetchMovieDetail(movieId);
 
@@ -82,45 +114,85 @@ function renderMoviesAndTVShows(movies, tvShows) {
             let movieDetailsXml = templates.detail(detail);
             let movieDetailsDoc = Presenter.makeDocument(movieDetailsXml);
 
-            movieDetailsDoc.addEventListener('select', async function (event) {
-                let element = event.target;
-                if (element.getAttribute('template') === 'video') {
-                    // let imdbId = element.getAttribute('id');
-                    // let movie = movies.find(movie => movie.id == movieId);
-
-                    let player = new Player();
-                    player.present();
-
-                    let streamInfo = await fetchStreamInfo(detail.imdb_id);
-                    let mediaItem = new MediaItem("video", streamInfo.url);
-                    let playlist = new Playlist();
-                    playlist.push(mediaItem);
-
-                    if (player) {
-                        player.playlist = playlist;
-                        player.play();
-                        // player.addEventListener("stateDidChange", function (event) {
-                        //     if (event.state === "end") {
-                        //         // Presenter.removeLoadingIndicator();
-                        //         // navigationDocument.popDocument();
-                        //     }
-                        // });
-                    }
-
-                }
-            });
+            attachDetailListener(movieDetailsDoc, detail);
             Presenter.defaultPresenter(movieDetailsDoc)
-
-        } else if (element.getAttribute('template') === 'tvShow') {
-            // let tvShowId = element.getAttribute('tvShowId');
-            // let tvShow = tvShows.find(tvShow => tvShow.id == tvShowId);
-            // let tvShowDetailsXml = templates.detail();
-            // let tvShowDetailsDoc = Presenter.makeDocument(tvShowDetailsXml);
-            // navigationDocument.pushDocument(tvShowDetailsDoc);
+            return;
         }
 
+        if (template === 'tvShow') {
+            let showId = element.getAttribute('id');
+            // detail = await fetchMovieDetail(movieId);
 
+            // let movie = movies.find(movie => movie.id == movieId);
+            // let showDetailsXml = templates.detail(tvShows[0]);
+            // let showDetailsDoc = Presenter.makeDocument(showDetailsXml);
+            // Presenter.defaultPresenter(showDetailsDoc)
+            return;
+        }
     },);
+}
 
-    Presenter.defaultPresenter(homeDoc)
+function attachDetailListener(document, detail) {
+    document.addEventListener('select', async function (event) {
+        let element = event.target;
+        let template = element.getAttribute('template');
+
+        if (template === 'alert') {
+            let alertDoc = createAlert(detail.title, detail.overview);
+            Presenter.modalDialogPresenter(alertDoc);
+            return;
+        }
+
+        if (template === 'video') {
+            // let imdbId = element.getAttribute('id');
+            // let movie = movies.find(movie => movie.id == movieId);
+
+            let player = new Player();
+            player.present();
+
+            let streamInfo = await fetchStreamInfo(detail.imdb_id);
+            let mediaItem = new MediaItem("video", streamInfo.url);
+            let playlist = new Playlist();
+            playlist.push(mediaItem);
+
+            if (player) {
+                player.playlist = playlist;
+                player.play();
+            }
+            return;
+        }
+    });
+}
+
+function buildResults(doc, searchText) {
+
+    //Create parser and new input element
+    var domImplementation = doc.implementation;
+    var lsParser = domImplementation.createLSParser(1, null);
+    var lsInput = domImplementation.createLSInput();
+
+    if (searchText.length < 3) {
+        lsInput.stringData = templates.noSearchResultLockup('', 'Needs at least 3 characters');
+        lsParser.parseWithContext(lsInput, doc.getElementsByTagName("collectionList").item(0), 2);
+        return;
+    }
+
+    this.fetchSearchResults(searchText)
+        .then(results => {
+            let filteredResults = results.filter(result => result.poster_path && result.poster_path.length > 0);
+
+            if (filteredResults.length == 0) {
+                lsInput.stringData = templates.noSearchResultLockup('No Results', '');
+                lsParser.parseWithContext(lsInput, doc.getElementsByTagName("collectionList").item(0), 2);
+                return;
+            }
+
+            lsInput.stringData = templates.searchResultsCollection(filteredResults);
+            lsParser.parseWithContext(lsInput, doc.getElementsByTagName("collectionList").item(0), 2);
+        })
+        .catch(error => {
+            console.error('Error searching TMDB:', error);
+            lsInput.stringData = templates.noSearchResultLockup('', '... Error Performing Search ...');
+            lsParser.parseWithContext(lsInput, doc.getElementsByTagName("collectionList").item(0), 2);
+        });
 }
