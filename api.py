@@ -1,6 +1,6 @@
 from flask import Flask, request, jsonify
 
-from vidsrc import VidSrcExtractor
+from vidsrc import SUPPORTED_SOURCES, VidSrcExtractor
 from utils import NoSourcesFound
 
 app = Flask(__name__)
@@ -25,12 +25,19 @@ def get_streams():
 
     # Instantiate VidSrcExtractor
     vse = VidSrcExtractor(
-        source_name = "Vidplay",
+        source_name = SUPPORTED_SOURCES[0],
         fetch_subtitles = True if get_subtitles else False,
     )
     streams, subtitles = vse.get_streams(media_type, media_id, None, None)
     if not streams:
-        return jsonify({'error': 'No streams found for the provided parameters.'}), 404
+        # Instantiate VidSrcExtractor
+        vse = VidSrcExtractor(
+            source_name = SUPPORTED_SOURCES[1],
+            fetch_subtitles = True if get_subtitles else False,
+        )
+        streams, subtitles = vse.get_streams(media_type, media_id, None, None)
+        if not streams:
+            return jsonify({'error': 'No streams found for the provided parameters.'}), 404
 
 
     json_streams = {
