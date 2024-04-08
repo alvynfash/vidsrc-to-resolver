@@ -11,7 +11,7 @@ from sources.vidplay import VidplayExtractor
 from sources.filemoon import FilemoonExtractor
 from utils import Utilities, VidSrcError, NoSourcesFound
 
-SUPPORTED_SOURCES = ["Vidplay", "Filemoon"]
+SUPPORTED_SOURCES = ["Filemoon", "Vidplay"]
 
 class VidSrcExtractor:
     BASE_URL = "https://vidsrc.to"
