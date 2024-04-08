@@ -203,7 +203,7 @@ if __name__ == "__main__":
 
         if questionary.confirm(f"Could not find sources for {vse.source_name}, would you like to try scraping {next_source}?").unsafe_ask():
             vse.source_name = next_source
-            streams, subtitles = vse.get_streams(media_type, media_id, se, ep)
+            streams, subtitles, source_url = vse.get_streams(media_type, media_id, se, ep)
     
     stream = questionary.select("Select Stream", choices=streams).unsafe_ask() if len(streams) > 1 else streams[0]
     mpv_cmd = f"mpv "
