@@ -13,7 +13,7 @@ RUN pip install -r requirements.txt
 COPY . .
 
 # Expose the server port
-EXPOSE 5000
+EXPOSE 8080
 
 # Set environment variable
 ENV FLASK_APP=api.py
