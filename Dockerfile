@@ -16,4 +16,6 @@ COPY . .
 # EXPOSE 8080
 
 # Command to start the server
-CMD gunicorn api:app
+CMD export FLASK_APP=api.py
+CMD flask run
+# CMD gunicorn api:app
