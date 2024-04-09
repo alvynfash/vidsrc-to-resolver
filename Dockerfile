@@ -4,10 +4,16 @@ RUN mkdir sources
 ADD sources /sources
 ADD utils.py .
 ADD vidsrc.py .
-RUN pip install requests beautifulsoup4 questionary jsonify flask gunicorn
+
+# Copy requirements and install dependencies
+COPY requirements.txt requirements.txt
+RUN pip install -r requirements.txt
+
+# Copy other project files
+COPY . .
 
 # Expose the server port
 EXPOSE 8080
 
 # Command to start the server
-CMD ["gunicorn", "-b", "0.0.0.0:8080", "api:app"]
+CMD gunicorn api:app
