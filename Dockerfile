@@ -13,9 +13,11 @@ RUN pip install -r requirements.txt
 COPY . .
 
 # Expose the server port
-# EXPOSE 8080
+EXPOSE 5000
+
+# Set environment variable
+ENV FLASK_APP=api.py
 
 # Command to start the server
-CMD export FLASK_APP=api.py
-CMD flask run
+CMD flask run -h 0.0.0.0
 # CMD gunicorn api:app
