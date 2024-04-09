@@ -13,7 +13,7 @@ RUN pip install -r requirements.txt
 COPY . .
 
 # Expose the server port
-EXPOSE 8080
+# EXPOSE 8080
 
 # Command to start the server
 CMD gunicorn api:app
