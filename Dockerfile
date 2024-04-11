@@ -1,7 +1,7 @@
 FROM python:3.12
 
-RUN mkdir sources
-ADD sources /sources
+# RUN mkdir sources
+# ADD sources /sources
 ADD utils.py .
 ADD vidsrc.py .
 
