@@ -59,14 +59,14 @@ async function fetchMovieDetail(movieId) {
 }
 
 async function fetchStreamInfo(imdbId) {
-    const url = `https://www.stream-app.tribestick.com/streams?id=${imdbId}&type=movie`;
+    const url = `https://stream-app.tribestick.com/streams?id=${imdbId}&type=movie`;
 
     let data = await fetch(url);
     return data;
 }
 
 async function fetchSearchResults(query) {
-    const tmdbEndpoint = `https://api.themoviedb.org/3/search/movie?api_key=${API_KEY}&query=${query}`;
+    const tmdbEndpoint = `${BASE_URL}/search/movie?api_key=${API_KEY}&query=${query}`;
 
     try {
         const response = await fetch(tmdbEndpoint);
