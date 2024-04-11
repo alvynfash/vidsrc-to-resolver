@@ -19,5 +19,5 @@ EXPOSE 8080
 ENV FLASK_APP=api.py
 
 # Command to start the server
-CMD flask run -h 0.0.0.0:8080
+CMD flask run -h 0.0.0.0
 # CMD gunicorn api:app
