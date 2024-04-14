@@ -28,14 +28,14 @@ def get_streams():
         source_name = SUPPORTED_SOURCES[0],
         fetch_subtitles = True if get_subtitles else False,
     )
-    streams, _, subtitles = vse.get_streams(media_type, media_id, None, None)
+    streams, _, subtitles = vse.get_streams(media_type, media_id, season, episode)
     if not streams:
         # Instantiate VidSrcExtractor
         vse = VidSrcExtractor(
             source_name = SUPPORTED_SOURCES[1],
             fetch_subtitles = True if get_subtitles else False,
         )
-        streams, _, subtitles = vse.get_streams(media_type, media_id, None, None)
+        streams, _, subtitles = vse.get_streams(media_type, media_id, season, episode)
         if not streams:
             return jsonify({'error': 'No streams found for the provided parameters.'}), 404
 

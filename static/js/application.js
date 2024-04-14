@@ -26,6 +26,7 @@ App.onLaunch = function (options) {
   var javascriptFiles = [
     `${options.BASEURL}js/ResourceLoader.js`,
     `${options.BASEURL}js/Presenter.js`,
+    `${options.BASEURL}js/themoviedb.js`,
     `${options.BASEURL}js/TMDB.js`,
     `${options.BASEURL}templates/grizzly/templates.js`
   ];

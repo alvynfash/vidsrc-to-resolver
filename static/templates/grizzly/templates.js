@@ -139,7 +139,7 @@ const templates = {
     return xml;
   },
 
-  detail: function (media) {
+  movieDetail: function (media) {
     let xml = `<?xml version="1.0" encoding="UTF-8" ?>
                 <document>
                   <head>
@@ -194,6 +194,61 @@ const templates = {
     return xml;
   },
 
+  tvDetail: function (media, seasons) {
+    let xml = `<?xml version="1.0" encoding="UTF-8" ?>
+                <document>
+                  <head>
+                    <style>
+                      .showTextOnHighlight {
+                        tv-text-highlight-style: show-on-highlight;
+                      }
+                      .whiteBadge {
+                        tv-tint-color: rgb(255, 255, 255);
+                      }
+                      .shelfLayout {
+                        padding: 20 90 50;
+                      }
+                    </style>
+                  </head>
+                  <productTemplate theme="dark">
+                    <background>
+                    </background>
+                    <banner>`;
+
+    // xml += this.genresLockup(media.genres);
+
+    xml += `<stack>
+              <title>${media.name}</title>
+              <row>
+                <text><badge src="resource://tomato-fresh" /> ${parseFloat(media.vote_average).toFixed(1)}</text>
+                <text>${media.first_air_date}</text>
+                <badge src="resource://mpaa-pg" class="whiteBadge" />
+                <badge src="resource://cc" class="whiteBadge" />
+              </row>
+              <description template="alert" handlesOverflow="true" allowsZooming="true">${this.getDescription(media)}</description>
+              <row>
+                <buttonLockup>
+                  <img src="${tvBaseURL}resources/images/icons/star_plus.png" width="40" height="40" />
+                  <title>Add to List</title>
+                </buttonLockup>
+              </row>
+            </stack>`;
+
+    xml += `<heroImg src="${this.getBackdropUrl(media)}" />
+          </banner>`;
+
+    seasons.forEach(season => {
+      xml += this.seasonLockup(season);
+    });
+
+    xml += this.castLockup(media.credits);
+
+    xml += `</productTemplate>
+          </document>`;
+
+    return xml;
+  },
+
   search: function () {
     return `<?xml version="1.0" encoding="UTF-8" ?>
                     <document>
@@ -230,13 +285,6 @@ const templates = {
             </list>`;
   },
 
-  // searchResultLockup: function (result) {
-  //   return `<lockup template="searchResult" id="${result.id}">
-  //             <img src="${this.getPosterUrl(result)}" width="340" height="245" />
-  //             <title>${result.title}</title>
-  //           </lockup>`;
-  // },
-
   searchResultsCollection: function (results) {
     let xml = `<collectionList>
                 <grid>
@@ -256,4 +304,27 @@ const templates = {
     return xml;
   },
 
+  seasonLockup: function (season) {
+    let xml = `<shelf class="shelfLayout">
+                  <header>
+                    <title>${season.name}</title>
+                  </header>
+               <section>`;
+
+    season.episodes.filter(episode => episode.still_path !== null).forEach(episode => {
+      xml += this.episodeLockup(episode, episode.episode_number, season.season_number);
+    });
+
+    xml += `</section>
+          </shelf>`;
+
+    return xml;
+  },
+
+  episodeLockup: function (episode, episodeNumber, seasonNumber) {
+    return `<lockup template="episode" id="${episode.show_id}" episode="${episodeNumber}" season="${seasonNumber}">
+            <img src="https://image.tmdb.org/t/p/w500${episode.still_path}" width="245" height="340" />
+            <title>Episode ${episode.episode_number}</title>
+          </lockup>`;
+  },
 };

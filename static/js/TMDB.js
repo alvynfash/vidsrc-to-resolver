@@ -4,6 +4,7 @@ const BASE_URL = 'https://api.themoviedb.org/3';
 const iterations = 20;
 let movies = [];
 let tvShows = [];
+let seasons = [];
 let detail = null;
 let pageDoc = null;
 
@@ -51,15 +52,15 @@ async function fetchTVShows() {
     }
 }
 
-async function fetchMovieDetail(movieId) {
-    const url = `${BASE_URL}/movie/${movieId}?api_key=${API_KEY}&language=en-US&append_to_response=credits,similar`;
+async function fetchStreamInfo(imdbId) {
+    const url = `https://stream-app.tribestick.com/streams?id=${imdbId}&type=movie`;
 
     let data = await fetch(url);
     return data;
 }
 
-async function fetchStreamInfo(imdbId) {
-    const url = `https://stream-app.tribestick.com/streams?id=${imdbId}&type=movie`;
+async function fetchEpisodeStreamInfo(id, season, episode) {
+    const url = `https://stream-app.tribestick.com/streams?id=${id}&type=tv&season=${season}&episode=${episode}`;
 
     let data = await fetch(url);
     return data;
@@ -108,25 +109,44 @@ function attachMainListener(document) {
 
         if (template === 'movie') {
             let movieId = element.getAttribute('id');
-            detail = await fetchMovieDetail(movieId);
+            theMovieDb.movies.getById({
+                "id": movieId,
+                "append_to_response": "credits,similar",
+            }, function (data) {
+                let detail = JSON.parse(data);
+                let movieDetailsXml = templates.movieDetail(detail);
+                let movieDetailsDoc = Presenter.makeDocument(movieDetailsXml);
 
-            // let movie = movies.find(movie => movie.id == movieId);
-            let movieDetailsXml = templates.detail(detail);
-            let movieDetailsDoc = Presenter.makeDocument(movieDetailsXml);
-
-            attachDetailListener(movieDetailsDoc, detail);
-            Presenter.defaultPresenter(movieDetailsDoc)
+                attachDetailListener(movieDetailsDoc, detail);
+                Presenter.defaultPresenter(movieDetailsDoc)
+            }, errorCallback);
             return;
         }
 
         if (template === 'tvShow') {
             let showId = element.getAttribute('id');
-            // detail = await fetchMovieDetail(movieId);
+            theMovieDb.tv.getById({
+                "id": showId,
+                "append_to_response": "credits,similar",
+            }, function (data) {
+                let detail = JSON.parse(data);
+                seasons = [];
+                for (let i = 1; i <= detail.number_of_seasons; i++) {
+                    theMovieDb.tvSeasons.getById({ "id": showId, "season_number": i }, function (data) {
+                        let result = JSON.parse(data);
+                        seasons.push(result);
 
-            // let movie = movies.find(movie => movie.id == movieId);
-            // let showDetailsXml = templates.detail(tvShows[0]);
-            // let showDetailsDoc = Presenter.makeDocument(showDetailsXml);
-            // Presenter.defaultPresenter(showDetailsDoc)
+                        if (seasons.length === detail.number_of_seasons) {
+                            // seasons.sort((a, b) => a.season_number - b.season_number);
+                            let tvDetailsXml = templates.tvDetail(detail, seasons.sort((a, b) => b.season_number - a.season_number));
+                            let tvDetailsDoc = Presenter.makeDocument(tvDetailsXml);
+
+                            attachDetailListener(tvDetailsDoc, detail);
+                            Presenter.defaultPresenter(tvDetailsDoc)
+                        }
+                    }, errorCallback);
+                }
+            }, errorCallback);
             return;
         }
     },);
@@ -137,20 +157,40 @@ function attachDetailListener(document, detail) {
         let element = event.target;
         let template = element.getAttribute('template');
 
+
         if (template === 'alert') {
-            let alertDoc = createAlert(detail.title, detail.overview);
+            let alertDoc = createAlert(detail.title ?? detail.name, detail.overview);
             Presenter.modalDialogPresenter(alertDoc);
             return;
         }
 
         if (template === 'video') {
-            // let imdbId = element.getAttribute('id');
-            // let movie = movies.find(movie => movie.id == movieId);
+            let id = element.getAttribute('id');
 
             let player = new Player();
             player.present();
 
             let streamInfo = await fetchStreamInfo(detail.imdb_id);
+            let mediaItem = new MediaItem("video", streamInfo.url);
+            let playlist = new Playlist();
+            playlist.push(mediaItem);
+
+            if (player) {
+                player.playlist = playlist;
+                player.play();
+            }
+            return;
+        }
+
+        if (template === 'episode') {
+            let id = element.getAttribute('id');
+            let seasonNumber = element.getAttribute('season');
+            let episodeNumber = element.getAttribute('episode');
+
+            let player = new Player();
+            player.present();
+
+            let streamInfo = await fetchEpisodeStreamInfo(id, seasonNumber, episodeNumber);
             let mediaItem = new MediaItem("video", streamInfo.url);
             let playlist = new Playlist();
             playlist.push(mediaItem);
@@ -196,3 +236,7 @@ function buildResults(doc, searchText) {
             lsParser.parseWithContext(lsInput, doc.getElementsByTagName("collectionList").item(0), 2);
         });
 }
+
+function errorCallback(data) {
+    console.log("Error callback: " + data);
+};
