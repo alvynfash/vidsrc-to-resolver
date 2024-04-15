@@ -66,26 +66,6 @@ async function fetchEpisodeStreamInfo(id, season, episode) {
     return data;
 }
 
-async function fetchSearchResults(query) {
-    theMovieDb.search.getMulti({ "query": query }, function successCallBack(data) {
-        // console.log("Error callback: " + data);
-        return JSON.parse(data);
-    }, function errorCallback(data) {
-        console.error('Error fetching data from TMDB API:', data);
-        return [];
-    });
-
-    // const tmdbEndpoint = `${BASE_URL}/search/movie?api_key=${API_KEY}&query=${query}`;
-
-    // try {
-    //     const response = await fetch(tmdbEndpoint);
-    //     return response.results;
-    // } catch (error) {
-    //     console.error('Error fetching data from TMDB API:', error);
-    //     return [];
-    // }
-}
-
 function renderMoviesAndTVShows(movies, tvShows) {
     let homeXml = templates.home(movies, tvShows);
     let homeDoc = Presenter.makeDocument(homeXml);
@@ -145,7 +125,6 @@ function attachMainListener(document) {
                         seasons.push(result);
 
                         if (seasons.length === detail.number_of_seasons) {
-                            // seasons.sort((a, b) => a.season_number - b.season_number);
                             let tvDetailsXml = templates.tvDetail(detail, seasons.sort((a, b) => b.season_number - a.season_number));
                             let tvDetailsDoc = Presenter.makeDocument(tvDetailsXml);
 
@@ -248,24 +227,7 @@ function buildResults(doc, searchText) {
             lsParser.parseWithContext(lsInput, doc.getElementsByTagName("collectionList").item(0), 2);
         },
     );
-    // this.fetchSearchResults(searchText)
-    //     .then(results => {
-    //         let filteredResults = results.filter(result => result.poster_path && result.poster_path.length > 0);
 
-    //         if (filteredResults.length == 0) {
-    //             lsInput.stringData = templates.noSearchResultLockup('No Results', '');
-    //             lsParser.parseWithContext(lsInput, doc.getElementsByTagName("collectionList").item(0), 2);
-    //             return;
-    //         }
-
-    //         lsInput.stringData = templates.searchResultsCollection(filteredResults);
-    //         lsParser.parseWithContext(lsInput, doc.getElementsByTagName("collectionList").item(0), 2);
-    //     })
-    //     .catch(error => {
-    //         console.error('Error searching TMDB:', error);
-    //         lsInput.stringData = templates.noSearchResultLockup('', '... Error Performing Search ...');
-    //         lsParser.parseWithContext(lsInput, doc.getElementsByTagName("collectionList").item(0), 2);
-    //     });
 }
 
 function errorCallback(data) {

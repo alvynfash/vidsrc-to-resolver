@@ -315,7 +315,7 @@ const templates = {
                   </header>
                <section>`;
 
-    season.episodes.filter(episode => episode.still_path !== null).forEach(episode => {
+    season.episodes.filter(episode => episode.air_date <= new Date().toISOString() && episode.still_path !== null).forEach(episode => {
       xml += this.episodeLockup(episode, episode.episode_number, season.season_number);
     });
 
