@@ -83,6 +83,24 @@ const templates = {
     return xml;
   },
 
+  najiaMoviesShelf: function (movies) {
+    let xml = `<shelf>
+                  <header>
+                    <title>9Ja</title>
+                  </header>
+                  <section>`;
+
+    // Loop through each movie and generate lockup elements
+    movies.filter(movie => movie.poster_path != null).forEach(movie => {
+      xml += this.movieLockup(movie);
+    });
+
+    xml += `</section>
+          </shelf>`;
+
+    return xml;
+  },
+
   tvShowsshelf: function (tvShows) {
     let xml = `<shelf>
                   <header>
@@ -101,7 +119,7 @@ const templates = {
     return xml;
   },
 
-  home: function (movies, tvShows) {
+  home: function (movies, tvShows, naijaMovies) {
     let xml = `<?xml version="1.0" encoding="UTF-8" ?>
   <document>
     <head>
@@ -131,6 +149,8 @@ const templates = {
     xml += this.moviesShelf(movies);
 
     xml += this.tvShowsshelf(tvShows);
+
+    xml += this.najiaMoviesShelf(naijaMovies);
 
     xml += `</collectionList>
           </stackTemplate>

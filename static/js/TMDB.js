@@ -5,6 +5,7 @@ const VidSrc_Stream_URl = 'https://stream-app.tribestick.com/streams';
 const iterations = 20;
 let movies = [];
 let tvShows = [];
+let naijaMovies = [];
 let seasons = [];
 let detail = null;
 let pageDoc = null;
@@ -12,8 +13,8 @@ let pageDoc = null;
 var TMDB = {
     fetchMoviesAndTvShows: function () {
         Presenter.showLoadingIndicator();
-        Promise.all([fetchMovies(), fetchTVShows()])
-            .then(() => renderMoviesAndTVShows(movies, tvShows))
+        Promise.all([fetchMovies(), fetchTVShows(), fetch9jaMovies()])
+            .then(() => renderMoviesAndTVShows(movies, tvShows, naijaMovies))
             .catch(error => console.error('Error fetching movies and TV shows:', error));
     }
 }
@@ -52,6 +53,18 @@ async function fetchTVShows() {
     }
 }
 
+async function fetch9jaMovies() {
+    for (let i = 0; i < iterations; i++) {
+        const url = `${BASE_URL}/discover/movie?api_key=${API_KEY}&include_adult=false&include_video=false&language=en-US&page=${i + 1}&sort_by=popularity.desc&with_origin_country=NG`;
+        let data = await fetch(url);
+        naijaMovies = [...naijaMovies, ...data.results];
+
+        if (i == data.total_pages) {
+            break;
+        }
+    }
+}
+
 async function fetchStreamInfo(imdbId) {
     const url = `${VidSrc_Stream_URl}?id=${imdbId}&type=movie`;
 
@@ -66,8 +79,8 @@ async function fetchEpisodeStreamInfo(id, season, episode) {
     return data;
 }
 
-function renderMoviesAndTVShows(movies, tvShows) {
-    let homeXml = templates.home(movies, tvShows);
+function renderMoviesAndTVShows(movies, tvShows, naijaMovies) {
+    let homeXml = templates.home(movies, tvShows, naijaMovies);
     let homeDoc = Presenter.makeDocument(homeXml);
     attachMainListener(homeDoc);
     Presenter.defaultPresenter(homeDoc)
