@@ -294,6 +294,10 @@ const templates = {
                   <section>`;
 
     results.forEach(result => {
+      if (result.media_type === 'tv') {
+        xml += this.tvShowLockup(result);
+        return;
+      }
       xml += this.movieLockup(result);
     });
 
