@@ -13,6 +13,7 @@ let pageDoc = null;
 var TMDB = {
     fetchMoviesAndTvShows: function () {
         Presenter.showLoadingIndicator();
+        ping();
         Promise.all([fetchMovies(), fetchTVShows(), fetch9jaMovies()])
             .then(() => renderMoviesAndTVShows(movies, tvShows, naijaMovies))
             .catch(error => console.error('Error fetching movies and TV shows:', error));
