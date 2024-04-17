@@ -36,6 +36,11 @@ function fetch(url) {
     });
 }
 
+async function ping() {
+    const url = `https://stream-app.tribestick.com/health`;
+    await fetch(url);
+}
+
 async function fetchMovies() {
     for (let i = 0; i < iterations; i++) {
         const url = `${BASE_URL}/movie/now_playing?api_key=${API_KEY}&page=${i + 1}&language=en-US`;
@@ -107,6 +112,9 @@ function attachMainListener(document) {
         if (template === 'favorite') {
             return;
         }
+
+        //Ping to warm up the server in case it's sleeping
+        ping();
 
         if (template === 'movie') {
             let movieId = element.getAttribute('id');
