@@ -347,7 +347,7 @@ const templates = {
 
   episodeLockup: function (episode, episodeNumber, seasonNumber) {
     return `<lockup template="episode" id="${episode.show_id}" episode="${episodeNumber}" season="${seasonNumber}">
-            <img src="https://image.tmdb.org/t/p/w500${episode.still_path}" width="245" height="340" />
+            <img src="https://image.tmdb.org/t/p/original${episode.still_path}" width="340" height="245" />
             <title>Episode ${episode.episode_number}</title>
           </lockup>`;
   },

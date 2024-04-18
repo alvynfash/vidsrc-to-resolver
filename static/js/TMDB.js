@@ -97,6 +97,9 @@ function attachMainListener(document) {
         // Enable if detail request takes too long
         // Presenter.showLoadingIndicator();
 
+        //Ping to warm up the server in case it's sleeping
+        ping();
+
         let element = event.target;
         let template = element.getAttribute('template');
 
@@ -113,9 +116,6 @@ function attachMainListener(document) {
         if (template === 'favorite') {
             return;
         }
-
-        //Ping to warm up the server in case it's sleeping
-        ping();
 
         if (template === 'movie') {
             let movieId = element.getAttribute('id');
@@ -165,6 +165,9 @@ function attachDetailListener(document, detail) {
     document.addEventListener('select', async function (event) {
         let element = event.target;
         let template = element.getAttribute('template');
+
+        //Ping to warm up the server in case it's sleeping
+        ping();
 
 
         if (template === 'alert') {
