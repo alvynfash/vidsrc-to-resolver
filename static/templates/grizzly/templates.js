@@ -35,6 +35,23 @@ const templates = {
     return xml;
   },
 
+  torrentLockup: function (torrents) {
+    let filteredTorrents = torrents.filter(torrent => torrent.quality == "720p" || torrent.quality == "1080p");
+
+    let xml = `<row>`;
+
+    filteredTorrents.forEach(torrent => {
+      xml += `<buttonLockup template="torrent" id="${torrent.hash}">
+                <img src="${tvBaseURL}resources/images/icons/play.png" width="40" height="40" />
+                <title>${torrent.quality}\n(${torrent.size})</title>
+              </buttonLockup>`;
+    });
+
+    xml += `</row>`;
+
+    return xml;
+  },
+
   genresLockup: function (genres) {
     let xml = `<infoList>
                 <info>
@@ -148,9 +165,9 @@ const templates = {
 
     xml += this.moviesShelf(movies);
 
-    xml += this.tvShowsshelf(tvShows);
+    // xml += this.tvShowsshelf(tvShows);
 
-    xml += this.najiaMoviesShelf(naijaMovies);
+    // xml += this.najiaMoviesShelf(naijaMovies);
 
     xml += `</collectionList>
           </stackTemplate>
@@ -190,18 +207,11 @@ const templates = {
                 <badge src="resource://mpaa-pg" class="whiteBadge" />
                 <badge src="resource://cc" class="whiteBadge" />
               </row>
-              <description template="alert" handlesOverflow="true" allowsZooming="true">${this.getDescription(media)}</description>
-              <row>
-                <buttonLockup template="video" id="${media.id}">
-                  <img src="${tvBaseURL}resources/images/icons/play.png" width="40" height="40" />
-                  <title>Watch</title>
-                </buttonLockup>
-                <buttonLockup>
-                  <img src="${tvBaseURL}resources/images/icons/star_plus.png" width="40" height="40" />
-                  <title>Add to List</title>
-                </buttonLockup>
-              </row>
-            </stack>`;
+              <description template="alert" handlesOverflow="true" allowsZooming="true">${this.getDescription(media)}</description>`;
+
+    xml += this.torrentLockup(media.torrents);
+
+    xml += `</stack>`;
 
     xml += `<heroImg src="${this.getBackdropUrl(media)}" />
           </banner>`;

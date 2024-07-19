@@ -1,6 +1,8 @@
 const API_KEY = '8cc0165ba6cfe8f3f1d0704bba65c29c';
 const BASE_URL = 'https://api.themoviedb.org/3';
 const VidSrc_Stream_URl = 'https://stream-app.tribestick.com/streams';
+const YTS_BASE_URL = 'https://yts.mx/api/v2';
+const RapidApiKey = '7a78ae4eeamshc12e49d24da11e3p12f8e1jsn9f095d094e00';
 
 const iterations = 20;
 let movies = [];
@@ -13,8 +15,11 @@ let pageDoc = null;
 var TMDB = {
     fetchMoviesAndTvShows: function () {
         Presenter.showLoadingIndicator();
-        ping();
-        Promise.all([fetchMovies(), fetchTVShows(), fetch9jaMovies()])
+        Promise.all([
+            fetchMovies(),
+            // fetchTVShows(),
+            // fetch9jaMovies(),
+        ])
             .then(() => renderMoviesAndTVShows(movies, tvShows, naijaMovies))
             .catch(error => console.error('Error fetching movies and TV shows:', error));
     }
@@ -37,9 +42,67 @@ function fetch(url) {
     });
 }
 
-async function ping() {
-    const url = `https://stream-app.tribestick.com/health`;
-    await fetch(url);
+function storeTorrentHash(hash) {
+    return new Promise(function (resolve, reject) {
+        const data = `magnet:?xt=urn:btih:${hash}`;
+
+        const xhr = new XMLHttpRequest();
+        xhr.withCredentials = true;
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4) {
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    resolve(JSON.parse(xhr.responseText));
+                } else {
+                    reject(new Error('Request failed: ' + xhr.status));
+                }
+            }
+        };
+
+        xhr.open('POST', `https://webtor.p.rapidapi.com/resource`);
+        xhr.setRequestHeader('x-rapidapi-key', RapidApiKey);
+        xhr.setRequestHeader('x-rapidapi-host', 'webtor.p.rapidapi.com');
+        xhr.setRequestHeader('Content-Type', 'text/plain');
+
+        xhr.send(data);
+    });
+}
+
+function fetchTorrentFiles(resourceId) {
+    return new Promise(function (resolve, reject) {
+        var xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4) {
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    resolve(JSON.parse(xhr.responseText));
+                } else {
+                    reject(new Error('Request failed: ' + xhr.status));
+                }
+            }
+        };
+        xhr.open('GET', `https://webtor.p.rapidapi.com/resource/${resourceId}/list?path=%2F&limit=10&offset=0&output=list`);
+        xhr.setRequestHeader('x-rapidapi-key', RapidApiKey);
+        xhr.setRequestHeader('x-rapidapi-host', 'webtor.p.rapidapi.com');
+        xhr.send();
+    });
+}
+
+function fetchVideoStreamInfo(resourceId, contentId) {
+    return new Promise(function (resolve, reject) {
+        var xhr = new XMLHttpRequest();
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4) {
+                if (xhr.status >= 200 && xhr.status < 300) {
+                    resolve(JSON.parse(xhr.responseText));
+                } else {
+                    reject(new Error('Request failed: ' + xhr.status));
+                }
+            }
+        };
+        xhr.open('GET', `https://webtor.p.rapidapi.com/resource/${resourceId}/export/${contentId}`);
+        xhr.setRequestHeader('x-rapidapi-key', RapidApiKey);
+        xhr.setRequestHeader('x-rapidapi-host', 'webtor.p.rapidapi.com');
+        xhr.send();
+    });
 }
 
 async function fetchMovies() {
@@ -97,9 +160,6 @@ function attachMainListener(document) {
         // Enable if detail request takes too long
         // Presenter.showLoadingIndicator();
 
-        //Ping to warm up the server in case it's sleeping
-        ping();
-
         let element = event.target;
         let template = element.getAttribute('template');
 
@@ -119,17 +179,22 @@ function attachMainListener(document) {
 
         if (template === 'movie') {
             let movieId = element.getAttribute('id');
+            // Fetch torrent from YTS
+            let torrents = await fetchMovieTorrents(movieId);
+            // Fetch movie details from TMDB
             theMovieDb.movies.getById({
                 "id": movieId,
                 "append_to_response": "credits,similar",
-            }, function (data) {
+            }, function async(data) {
                 let detail = JSON.parse(data);
+                detail.torrents = torrents;
                 let movieDetailsXml = templates.movieDetail(detail);
                 let movieDetailsDoc = Presenter.makeDocument(movieDetailsXml);
 
                 attachDetailListener(movieDetailsDoc, detail);
                 Presenter.defaultPresenter(movieDetailsDoc)
             }, errorCallback);
+
             return;
         }
 
@@ -165,10 +230,6 @@ function attachDetailListener(document, detail) {
     document.addEventListener('select', async function (event) {
         let element = event.target;
         let template = element.getAttribute('template');
-
-        //Ping to warm up the server in case it's sleeping
-        ping();
-
 
         if (template === 'alert') {
             let alertDoc = createAlert(detail.title ?? detail.name, detail.overview);
@@ -211,6 +272,44 @@ function attachDetailListener(document, detail) {
                 player.playlist = playlist;
                 player.play();
             }
+            return;
+        }
+
+        if (template === 'torrent') {
+            let player = new Player();
+            try {
+                let hash = element.getAttribute('id');
+
+                player.present();
+
+                // Store torrent hash
+                response = await storeTorrentHash(hash);
+                let resourceId = response.id;
+
+                // Fetch torrent files
+                response = await fetchTorrentFiles(resourceId);
+                let videoFile = filterVideoFile(response.items);
+                let contentId = videoFile[0].id;
+
+                // Fetch video stream info
+                response = await fetchVideoStreamInfo(resourceId, contentId);
+                let streamUrl = response.exports.stream.url;
+
+                // Play video
+                let mediaItem = new MediaItem("video", streamUrl);
+                let playlist = new Playlist();
+                playlist.push(mediaItem);
+
+                if (player) {
+                    player.playlist = playlist;
+                    player.play();
+                }
+            } catch (error) {
+                console.error('Error fetching torrent:', error);
+                navigationDocument.popDocument();
+                player = null;
+            }
+
             return;
         }
     });
@@ -258,3 +357,22 @@ function buildResults(doc, searchText) {
 function errorCallback(data) {
     console.log("Error callback: " + data);
 };
+
+async function fetchMovieTorrents(movieId) {
+    let imdbId = await fetchImdbId(movieId);
+
+    const url = `${YTS_BASE_URL}/movie_details.json?with_cast=true&imdb_id=${imdbId}`;
+    let result = await fetch(url);
+    return result.data.movie.torrents || [];
+}
+
+async function fetchImdbId(movieId) {
+    const url = `${BASE_URL}/movie/${movieId}/external_ids?api_key=${API_KEY}`;
+
+    let result = await fetch(url);
+    return result.imdb_id;
+}
+
+function filterVideoFile(files) {
+    return files.filter(file => file.media_format === 'video');
+}
