@@ -181,13 +181,14 @@ function attachMainListener(document) {
             let movieId = element.getAttribute('id');
             // Fetch torrent from YTS
             let torrents = await fetchMovieTorrents(movieId);
+            let filteredTorrents = torrents.filter(torrent => torrent.seeds > 0);
             // Fetch movie details from TMDB
             theMovieDb.movies.getById({
                 "id": movieId,
                 "append_to_response": "credits,similar",
             }, function async(data) {
                 let detail = JSON.parse(data);
-                detail.torrents = torrents;
+                detail.torrents = filteredTorrents;
                 let movieDetailsXml = templates.movieDetail(detail);
                 let movieDetailsDoc = Presenter.makeDocument(movieDetailsXml);
 
