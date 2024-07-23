@@ -1,10 +1,11 @@
 const API_KEY = '8cc0165ba6cfe8f3f1d0704bba65c29c';
 const BASE_URL = 'https://api.themoviedb.org/3';
-const VidSrc_Stream_URl = 'https://stream-app.tribestick.com/streams';
+const VidSrc_Stream_URl = 'https://stream-app.tribestick.com';
+// const VidSrc_Stream_URl = 'http://192.168.0.108:8080';
 const YTS_BASE_URL = 'https://yts.mx/api/v2';
 const RapidApiKey = '7a78ae4eeamshc12e49d24da11e3p12f8e1jsn9f095d094e00';
 
-const iterations = 20;
+const iterations = 10;
 let movies = [];
 let tvShows = [];
 let naijaMovies = [];
@@ -17,7 +18,7 @@ var TMDB = {
         Presenter.showLoadingIndicator();
         Promise.all([
             fetchMovies(),
-            // fetchTVShows(),
+            fetchTVShows(),
             // fetch9jaMovies(),
         ])
             .then(() => renderMoviesAndTVShows(movies, tvShows, naijaMovies))
@@ -106,19 +107,31 @@ function fetchVideoStreamInfo(resourceId, contentId) {
 }
 
 async function fetchMovies() {
-    for (let i = 0; i < iterations; i++) {
-        const url = `${BASE_URL}/movie/now_playing?api_key=${API_KEY}&page=${i + 1}&language=en-US`;
+    // for (let i = 0; i < iterations; i++) {
+    //     const url = `${BASE_URL}/movie/now_playing?api_key=${API_KEY}&page=${i + 1}&language=en-US`;
+    //     let data = await fetch(url);
+    //     movies = [...movies, ...data.results];
+    // }
+
+    for (let i = 1; i < iterations; i++) {
+        const url = `${VidSrc_Stream_URl}/movies?page=${i}`;
         let data = await fetch(url);
-        movies = [...movies, ...data.results];
+        movies = [...movies, ...data.filter(movie => movie.poster_path && movie.poster_path.length > 0)];
     }
 }
 
 async function fetchTVShows() {
-    for (let i = 0; i < iterations; i++) {
-        const url = `${BASE_URL}/trending/tv/day?api_key=${API_KEY}&page=${i + 1}&language=en-US`;
+    // for (let i = 0; i < iterations; i++) {
+    //     const url = `${BASE_URL}/trending/tv/day?api_key=${API_KEY}&page=${i + 1}&language=en-US`;
 
+    //     let data = await fetch(url);
+    //     tvShows = [...tvShows, ...data.results];
+    // }
+
+    for (let i = 1; i < iterations; i++) {
+        const url = `${VidSrc_Stream_URl}/series?page=${i}`;
         let data = await fetch(url);
-        tvShows = [...tvShows, ...data.results];
+        tvShows = [...tvShows, ...data];
     }
 }
 
@@ -135,14 +148,14 @@ async function fetch9jaMovies() {
 }
 
 async function fetchStreamInfo(imdbId) {
-    const url = `${VidSrc_Stream_URl}?id=${imdbId}&type=movie`;
+    const url = `${VidSrc_Stream_URl}/streams?id=${imdbId}&type=movie`;
 
     let data = await fetch(url);
     return data;
 }
 
 async function fetchEpisodeStreamInfo(id, season, episode) {
-    const url = `${VidSrc_Stream_URl}?id=${id}&type=tv&season=${season}&episode=${episode}`;
+    const url = `${VidSrc_Stream_URl}/streams?id=${id}&type=tv&season=${season}&episode=${episode}`;
 
     let data = await fetch(url);
     return data;
@@ -155,7 +168,7 @@ function renderMoviesAndTVShows(movies, tvShows, naijaMovies) {
     Presenter.defaultPresenter(homeDoc)
 }
 
-function attachMainListener(document) {
+async function attachMainListener(document) {
     document.addEventListener('select', async function (event) {
         // Enable if detail request takes too long
         // Presenter.showLoadingIndicator();
@@ -178,23 +191,35 @@ function attachMainListener(document) {
         }
 
         if (template === 'movie') {
-            let movieId = element.getAttribute('id');
-            // Fetch torrent from YTS
-            let torrents = await fetchMovieTorrents(movieId);
-            let filteredTorrents = torrents.filter(torrent => torrent.seeds > 0);
-            // Fetch movie details from TMDB
-            theMovieDb.movies.getById({
-                "id": movieId,
-                "append_to_response": "credits,similar",
-            }, function async(data) {
-                let detail = JSON.parse(data);
-                detail.torrents = filteredTorrents;
-                let movieDetailsXml = templates.movieDetail(detail);
-                let movieDetailsDoc = Presenter.makeDocument(movieDetailsXml);
+            let movieUrl = element.getAttribute('id');
+            let title = movieUrl.split('/').pop().replace(/-/g, ' ').replace(/\d{4}/, '').trim();
+            let year = movieUrl.match(/\d{4}/)[0];
 
-                attachDetailListener(movieDetailsDoc, detail);
-                Presenter.defaultPresenter(movieDetailsDoc)
-            }, errorCallback);
+            theMovieDb.search.getMovie(
+                {
+                    "query": title,
+                    "year": year,
+                },
+                async function (data) {
+                    let movies = JSON.parse(data);
+                    let movie = movies.results[0];
+
+                    // Fetch torrent from YTS
+                    let torrents = await fetchMovieTorrents(movie.id);
+                    // // Fetch movie details from TMDB
+                    theMovieDb.movies.getById({
+                        "id": movie.id,
+                        "append_to_response": "credits,similar",
+                    }, function async(data) {
+                        let detail = JSON.parse(data);
+                        detail.torrents = filteredTorrents;
+                        let movieDetailsXml = templates.movieDetail(detail);
+                        let movieDetailsDoc = Presenter.makeDocument(movieDetailsXml);
+
+                        attachDetailListener(movieDetailsDoc, detail);
+                        Presenter.defaultPresenter(movieDetailsDoc)
+                    }, errorCallback);
+                }, errorCallback);
 
             return;
         }
@@ -316,6 +341,12 @@ function attachDetailListener(document, detail) {
     });
 }
 
+async function search(query) {
+    const url = `${VidSrc_Stream_URl}/search?query=${query}`;
+    let data = await fetch(url);
+    return data;
+}
+
 function buildResults(doc, searchText) {
 
     //Create parser and new input element
@@ -329,42 +360,76 @@ function buildResults(doc, searchText) {
         return;
     }
 
-    theMovieDb.search.getMulti(
-        { "query": searchText },
-        function successCallBack(data) {
-            let json = JSON.parse(data);
-            let results = json.results;
-            let filteredResults = results.filter(result => result.poster_path && result.poster_path.length > 0);
+    search(searchText).then((data) => {
+        // let json = JSON.parse(data);
+        let filteredResults = data.filter(result => result.poster_path && result.poster_path.length > 0);
 
-            if (filteredResults.length == 0) {
-                lsInput.stringData = templates.noSearchResultLockup('No Results', '');
-                lsParser.parseWithContext(lsInput, doc.getElementsByTagName("collectionList").item(0), 2);
-                return;
-            }
-
-            lsInput.stringData = templates.searchResultsCollection(filteredResults);
+        if (filteredResults.length == 0) {
+            lsInput.stringData = templates.noSearchResultLockup('No Results', '');
             lsParser.parseWithContext(lsInput, doc.getElementsByTagName("collectionList").item(0), 2);
-        },
-        function errorCallback(data) {
-            let error = data;
-            console.error('Error searching TMDB:', error);
+            return;
+        }
+
+        lsInput.stringData = templates.searchResultsCollection(filteredResults);
+        lsParser.parseWithContext(lsInput, doc.getElementsByTagName("collectionList").item(0), 2);
+    })
+        .catch((error) => {
+            console.error('Error searching VidSrc:', error);
             lsInput.stringData = templates.noSearchResultLockup('', '... Error Performing Search ...');
             lsParser.parseWithContext(lsInput, doc.getElementsByTagName("collectionList").item(0), 2);
-        },
-    );
+        });
 
+    // theMovieDb.search.getMulti(
+    //     { "query": searchText },
+    //     function successCallBack(data) {
+    //         let json = JSON.parse(data);
+    //         let results = json.results;
+    //         let filteredResults = results.filter(result => result.poster_path && result.poster_path.length > 0);
+
+    //         if (filteredResults.length == 0) {
+    //             lsInput.stringData = templates.noSearchResultLockup('No Results', '');
+    //             lsParser.parseWithContext(lsInput, doc.getElementsByTagName("collectionList").item(0), 2);
+    //             return;
+    //         }
+
+    //         lsInput.stringData = templates.searchResultsCollection(filteredResults);
+    //         lsParser.parseWithContext(lsInput, doc.getElementsByTagName("collectionList").item(0), 2);
+    //     },
+    //     function errorCallback(data) {
+    //         let error = data;
+    //         console.error('Error searching TMDB:', error);
+    //         lsInput.stringData = templates.noSearchResultLockup('', '... Error Performing Search ...');
+    //         lsParser.parseWithContext(lsInput, doc.getElementsByTagName("collectionList").item(0), 2);
+    //     },
+    // );
 }
 
 function errorCallback(data) {
     console.log("Error callback: " + data);
 };
 
+async function fetchMovieDetails(movieId) {
+    let imdbId = await fetchImdbId(movieId);
+
+    const url = `${YTS_BASE_URL}/movie_details.json?with_cast=true&imdb_id=${movieId}`;
+    let result = await fetch(url);
+    return result.data.movie.torrents || [];
+}
+
+async function fetchMediaDetails(category, mediaUrl) {
+    const url = `${VidSrc_Stream_URl}/details?category=${category}&mediaUrl=${mediaUrl}`;
+    let result = await fetch(url);
+    return result.data.movie.torrents || [];
+}
+
 async function fetchMovieTorrents(movieId) {
     let imdbId = await fetchImdbId(movieId);
 
-    const url = `${YTS_BASE_URL}/movie_details.json?with_cast=true&imdb_id=${imdbId}`;
+    const url = `${YTS_BASE_URL}/movie_details.json?imdb_id=${imdbId}`;
     let result = await fetch(url);
-    return result.data.movie.torrents || [];
+    let torrents = result.data.movie.torrents || [];
+    let filteredTorrents = torrents.filter(torrent => torrent.seeds > 0);
+    return filteredTorrents;
 }
 
 async function fetchImdbId(movieId) {

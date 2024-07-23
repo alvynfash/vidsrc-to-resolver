@@ -2,7 +2,7 @@
 
 const templates = {
   getPosterUrl: function (media) {
-    return `https://image.tmdb.org/t/p/w500${media.poster_path}`;
+    return media.poster_path;
   },
 
   getBackdropUrl: function (media) {
@@ -71,13 +71,13 @@ const templates = {
 
   movieLockup: function (movie) {
     // <title>${movie.title}</title>
-    return `<lockup template="movie" id="${movie.id}">
+    return `<lockup template="movie" id="${movie.url}">
               <img src="${this.getPosterUrl(movie)}" width="245" height="340" />
             </lockup>`;
   },
 
   tvShowLockup: function (tvShow) {
-    return `<lockup template="tvShow" id="${tvShow.id}">
+    return `<lockup template="tvShow" id="${tvShow.url}">
             <img src="${this.getPosterUrl(tvShow)}" width="245" height="340" />
           </lockup>`;
   },
@@ -165,7 +165,7 @@ const templates = {
 
     xml += this.moviesShelf(movies);
 
-    // xml += this.tvShowsshelf(tvShows);
+    xml += this.tvShowsshelf(tvShows);
 
     // xml += this.najiaMoviesShelf(naijaMovies);
 
