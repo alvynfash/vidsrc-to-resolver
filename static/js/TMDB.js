@@ -5,7 +5,7 @@ const VidSrc_Stream_URl = 'https://stream-app.tribestick.com';
 const YTS_BASE_URL = 'https://yts.mx/api/v2';
 const RapidApiKey = '7a78ae4eeamshc12e49d24da11e3p12f8e1jsn9f095d094e00';
 
-const iterations = 10;
+const iterations = 5;
 let movies = [];
 let tvShows = [];
 let naijaMovies = [];
@@ -212,7 +212,7 @@ async function attachMainListener(document) {
                         "append_to_response": "credits,similar",
                     }, function async(data) {
                         let detail = JSON.parse(data);
-                        detail.torrents = filteredTorrents;
+                        detail.torrents = torrents;
                         let movieDetailsXml = templates.movieDetail(detail);
                         let movieDetailsDoc = Presenter.makeDocument(movieDetailsXml);
 
