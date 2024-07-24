@@ -1,3 +1,4 @@
+import asyncio
 from rdapi import RD
 
 class RealDebrid():
@@ -29,6 +30,10 @@ class RealDebrid():
             print('Adding magnet: ', magnet)
             magnetResult = self.RD.torrents.add_magnet(magnet).json()
             magnetId = magnetResult['id']
+            
+            if not magnetId:
+                continue
+
             infoResult = self.RD.torrents.info(id=magnetId).json()
             files = infoResult['files']
             movie_files = [file for file in files if any(file['path'].endswith(ext) for ext in self.movie_extensions)]
@@ -49,4 +54,4 @@ class RealDebrid():
 
 # k = RealDebrid().RD.torrents.get(limit=50).json()
 # print(k)
-# RealDebrid().saveMagnets(magnets=[ '59A4EE31CD1DDDDD3CC345F92C77F29C89C18882',])
+# asyncio.run(RealDebrid().saveMagnets(magnets=[ '59A4EE31CD1DDDDD3CC345F92C77F29C89C18882',]))
