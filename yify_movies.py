@@ -144,4 +144,4 @@ class YifyMoviesAPI():
             await RealDebrid().saveMagnets(magnets)
         response.close()
 
-asyncio.run(YifyMoviesAPI().scrape2())
+# asyncio.run(YifyMoviesAPI().scrape2())
