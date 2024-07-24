@@ -140,7 +140,7 @@ class YifyMoviesAPI():
                         next
                 # magnets.append(hash_value)
 
-            print("Saving {} magnets to RealDebrid".format(magnets.count()))
+            print("Saving magnets to RealDebrid")
             await RealDebrid().saveMagnets(magnets)
         response.close()
 

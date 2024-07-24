@@ -6,3 +6,4 @@ flask
 gunicorn
 unidecode
 rd_api_py
+asyncio
