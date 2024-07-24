@@ -3,8 +3,11 @@ from rdapi import RD
 
 class RealDebrid():
 
-    RD = RD()
-    RD.rd_apitoken = "J3D5QKFBS4URJRHOHRJEMXH635VW3ETQBTPSUGPHU44LYHHOEIAA"
+    def __init__(self):
+        self.RD = RD()
+        self.RD.rd_apitoken = "J3D5QKFBS4URJRHOHRJEMXH635VW3ETQBTPSUGPHU44LYHHOEIAA"
+
+    # RD.rd_apitoken = "J3D5QKFBS4URJRHOHRJEMXH635VW3ETQBTPSUGPHU44LYHHOEIAA"
 
     movie_extensions = [
         '.mkv', '.mp4', '.avi', '.mov', '.wmv', '.flv', '.webm',
@@ -30,7 +33,7 @@ class RealDebrid():
             print('Adding magnet: ', magnet)
             magnetResult = self.RD.torrents.add_magnet(magnet).json()
             magnetId = magnetResult['id']
-            
+
             if not magnetId:
                 continue
 
@@ -52,6 +55,7 @@ class RealDebrid():
             # RD.unrestrict.link(link=url)
             # print(RD.torrents.get(limit=10).json())
 
+# k = RealDebrid().RD.user.get().json()
 # k = RealDebrid().RD.torrents.get(limit=50).json()
 # print(k)
 # asyncio.run(RealDebrid().saveMagnets(magnets=[ '59A4EE31CD1DDDDD3CC345F92C77F29C89C18882',]))
