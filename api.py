@@ -1,5 +1,6 @@
 import threading
 import requests
+import asyncio
 
 from time import sleep
 from flask import Flask, request, jsonify
@@ -8,9 +9,11 @@ from vidsrc import SUPPORTED_SOURCES, VidSrcExtractor
 from utils import NoSourcesFound
 from yify_movies import YifyMoviesAPI
 from yify_series import YifySeriesAPI
+from real_debrid import RealDebrid
 
 yifySeriesApi = YifySeriesAPI()
 yifyMoviesApi = YifyMoviesAPI()
+realDebridApi = RealDebrid()
 
 app = Flask(__name__)
 
@@ -107,9 +110,18 @@ def series():
 
     if not page:
         return jsonify({'error': 'page is required.'}), 400
-    
+
     seriessResults = yifySeriesApi.series(page=page)
     return jsonify(seriessResults)
 
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8080)
+@app.route('/scrape')
+def scrapeMovies():
+    asyncio.run(YifyMoviesAPI().scrape2())
+    # await realDebridApi.saveMagnets(magnets=scrapeResults['magnets'])
+    # return jsonify(scrapeResults['results'])
+
+    # await realDebridApi.saveMagnets(magnets=['59A4EE31CD1DDDDD3CC345F92C77F29C89C18882',])
+    # return jsonify({'message': 'scrape complete'})
+
+# if __name__ == '__main__':
+#     app.run(host='0.0.0.0', port=8080)

@@ -4,3 +4,5 @@ questionary
 jsonify
 flask
 gunicorn
+unidecode
+rd_api_py
