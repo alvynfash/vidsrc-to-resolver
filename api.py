@@ -4,6 +4,7 @@ import asyncio
 
 from time import sleep
 from flask import Flask, request, jsonify
+from flask_cors import CORS  # Import CORS
 
 from vidsrc import SUPPORTED_SOURCES, VidSrcExtractor
 from utils import NoSourcesFound
@@ -16,7 +17,20 @@ yifyMoviesApi = YifyMoviesAPI()
 realDebridApi = RealDebrid()
 
 app = Flask(__name__)
-
+CORS(
+    app,
+    allow_origins=[
+        "https://www.stream-app.tribestick.com/",
+        "https://www.stream-app.tribestick.com",
+        "http://localhost:3000",
+        "http://localhost:8080",
+        "http://localhost:8000",
+        "http://localhost:10000"
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],  # Enable CORS for all domains on all routes
+)
 userAgent_header = {'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.75 Safari/537.36'}
 
 health_thread = None
