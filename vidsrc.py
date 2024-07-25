@@ -43,7 +43,7 @@ class VidSrcExtractor:
         return unquote(decoded_text)
 
     def get_source_url(self, source_id: str) -> str:
-        req = requests.get(f"{VidSrcExtractor.BASE_URL}/ajax/embed/source/{source_id}?token={self.encode_id(source_id)}")
+        req = requests.get(f"{VidSrcExtractor.BASE_URL}/ajax/embed/source/{source_id}?token={self.encode_id(source_id)}", headers={'user-agent': VidSrcExtractor.USER_AGENT})
         if req.status_code != 200:
             error_msg = f"Couldnt fetch {req.url}, status code: {req.status_code}..."
             raise VidSrcError(error_msg)
@@ -54,7 +54,7 @@ class VidSrcExtractor:
 
 
     def get_sources(self, data_id: str) -> Dict:
-        req = requests.get(f"{VidSrcExtractor.BASE_URL}/ajax/embed/episode/{data_id}/sources?token={self.encode_id(data_id)}")
+        req = requests.get(f"{VidSrcExtractor.BASE_URL}/ajax/embed/episode/{data_id}/sources?token={self.encode_id(data_id)}", headers={'user-agent': VidSrcExtractor.USER_AGENT})
         if req.status_code != 200:
             error_msg = f"Couldnt fetch {req.url}, status code: {req.status_code}..."
             raise VidSrcError(error_msg)
@@ -68,7 +68,7 @@ class VidSrcExtractor:
             url += f"/{season}/{episode}"
 
         print(f"[>] Requesting {url}...")
-        req = requests.get(url)
+        req = requests.get(url, headers={'user-agent': VidSrcExtractor.USER_AGENT})
         if req.status_code != 200:
             print(f"[VidSrcExtractor] Couldnt fetch \"{req.url}\", status code: {req.status_code}\n[VidSrcExtractor] \"{self.source_name}\" likely doesnt have the requested media...")
             return None, None, None

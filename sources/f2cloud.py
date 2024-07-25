@@ -7,6 +7,7 @@ from typing import Optional, Tuple, Dict, List
 from utils import CouldntFetchKeys, Utilities
 
 class F2CloudExtractor:
+    USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0"
     KEY_URL = "https://github.com/Ciarands/vidsrc-keys/blob/main/keys.json"
     KEYS = {}
 
@@ -23,7 +24,7 @@ class F2CloudExtractor:
             return {}
         
         subtitles_url_formatted = unquote(subtitles_url.group(1))
-        req = requests.get(subtitles_url_formatted)
+        req = requests.get(subtitles_url_formatted, headers={'user-agent': F2CloudExtractor.USER_AGENT})
         
         if req.status_code == 200:
             return {subtitle.get("label"): subtitle.get("file") for subtitle in req.json()}
@@ -32,7 +33,7 @@ class F2CloudExtractor:
 
     @staticmethod
     def get_keys() -> dict:
-        req = requests.get(F2CloudExtractor.KEY_URL)
+        req = requests.get(F2CloudExtractor.KEY_URL, headers={'user-agent': F2CloudExtractor.USER_AGENT})
 
         if req.status_code != 200:
             raise CouldntFetchKeys("Failed to fetch decryption keys!")
@@ -90,7 +91,7 @@ class F2CloudExtractor:
         enc_id = self.encode_embed_id(url_data[0].split("/e/")[-1])
         h = self.encode_h(url_data[0].split("/e/")[-1])
         
-        req = requests.get(f"{provider_url}/mediainfo/{enc_id}?{url_data[1]}&autostart=true&ads=0&h={h}", headers={"Referer": url})
+        req = requests.get(f"{provider_url}/mediainfo/{enc_id}?{url_data[1]}&autostart=true&ads=0&h={h}", headers={"Referer": url, 'user-agent': F2CloudExtractor.USER_AGENT})
         if req.status_code != 200:
             print(f"[VidplayExtractor] Failed to retrieve media, status code: {req.status_code}...")
             return None, None, None

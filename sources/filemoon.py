@@ -4,6 +4,8 @@ from utils import Utilities
 from typing import Optional, Tuple, Dict, Any
 
 class FilemoonExtractor:
+    USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0"
+
     @staticmethod
     def unpack(p: str, a: int, c: int, k: list, e: Optional[Any]=None, d: Optional[Any]=None) -> str:
         for i in range(c-1, -1, -1):
@@ -11,7 +13,7 @@ class FilemoonExtractor:
         return p
 
     def resolve_source(self, url: str, **kwargs: Dict[str, Any]) -> Tuple[Optional[str], None, Optional[str]]:
-        req = requests.get(url)
+        req = requests.get(url, headers={'user-agent': FilemoonExtractor.USER_AGENT})
         if req.status_code != 200:
             print(f"[FilemoonExtractor] Failed to retrieve media, status code: {req.status_code}...")
             return None, None, None
