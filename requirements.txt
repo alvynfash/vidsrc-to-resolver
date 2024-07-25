@@ -3,6 +3,7 @@ beautifulsoup4
 questionary
 jsonify
 flask
+flask_cors
 gunicorn
 unidecode
 rd_api_py
