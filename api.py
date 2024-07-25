@@ -117,11 +117,11 @@ def series():
 @app.route('/scrape')
 def scrapeMovies():
     asyncio.run(YifyMoviesAPI().scrape2())
+    return jsonify({'message': 'scrape complete'})
     # await realDebridApi.saveMagnets(magnets=scrapeResults['magnets'])
     # return jsonify(scrapeResults['results'])
 
     # await realDebridApi.saveMagnets(magnets=['59A4EE31CD1DDDDD3CC345F92C77F29C89C18882',])
-    # return jsonify({'message': 'scrape complete'})
 
 # if __name__ == '__main__':
 #     app.run(host='0.0.0.0', port=8080)
