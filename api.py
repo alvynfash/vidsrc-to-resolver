@@ -44,6 +44,41 @@ def start_health_check():
 # Start the health check upon Flask deployment
 start_health_check()
 
+@app.route('/streams', methods=['GET'])
+def get_streams():
+    media_id = request.args.get('id')
+    media_type = request.args.get('type')
+    season = request.args.get('season')
+    episode = request.args.get('episode')
+    get_subtitles = request.args.get('subtitles')
+
+    if not media_id or not media_type:
+        return jsonify({'error': 'Both id and type are required.'}), 400
+
+    # Instantiate VidSrcExtractor
+    vse = VidSrcExtractor(
+        source_name = SUPPORTED_SOURCES[0],
+        fetch_subtitles = True if get_subtitles else False,
+    )
+    streams, _, subtitles = vse.get_streams(media_type, media_id, season, episode)
+    if not streams:
+        # Instantiate VidSrcExtractor
+        vse = VidSrcExtractor(
+            source_name = SUPPORTED_SOURCES[1],
+            fetch_subtitles = True if get_subtitles else False,
+        )
+        streams, _, subtitles = vse.get_streams(media_type, media_id, season, episode)
+        if not streams:
+            return jsonify({'error': 'No streams found for the provided parameters.'}), 404
+
+
+    json_streams = {
+        "url": streams[0],
+        "subtitles": subtitles
+    }
+
+    return jsonify(json_streams), 200
+
 # Health route
 @app.route('/health', methods=['GET'])
 def health_check():
