@@ -48,8 +48,8 @@ start_health_check()
 def get_streams():
     media_id = request.args.get('id')
     media_type = request.args.get('type')
-    season = request.args.get('season')
-    episode = request.args.get('episode')
+    season = request.args.get('season') if  request.args.get('season') else None
+    episode = request.args.get('episode') if request.args.get('episode') else None
     get_subtitles = request.args.get('subtitles')
 
     if not media_id or not media_type:
@@ -153,10 +153,6 @@ def series():
 def scrapeMovies():
     asyncio.run(YifyMoviesAPI().scrape2())
     return jsonify({'message': 'scrape complete'})
-    # await realDebridApi.saveMagnets(magnets=scrapeResults['magnets'])
-    # return jsonify(scrapeResults['results'])
-
-    # await realDebridApi.saveMagnets(magnets=['59A4EE31CD1DDDDD3CC345F92C77F29C89C18882',])
 
 # if __name__ == '__main__':
 #     app.run(host='0.0.0.0', port=8080)
