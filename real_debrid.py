@@ -5,9 +5,6 @@ class RealDebrid():
 
     def __init__(self):
         self.RD = RD()
-        self.RD.rd_apitoken = "J3D5QKFBS4URJRHOHRJEMXH635VW3ETQBTPSUGPHU44LYHHOEIAA"
-
-    # RD.rd_apitoken = "J3D5QKFBS4URJRHOHRJEMXH635VW3ETQBTPSUGPHU44LYHHOEIAA"
 
     movie_extensions = [
         '.mkv', '.mp4', '.avi', '.mov', '.wmv', '.flv', '.webm',
